@@ -108,6 +108,15 @@
 		return coinjs.base58encode(r.concat(checksum));
 	}
 
+	/* provide a redeemscript and return address */
+	coinjs.redeemscript2address = function(h){
+		var r = ripemd160(Crypto.SHA256(Crypto.util.hexToBytes(h), {asBytes: true}));
+		r.unshift(coinjs.multisig);
+		var hash = Crypto.SHA256(Crypto.SHA256(r, {asBytes: true}), {asBytes: true});
+		var checksum = hash.slice(0, 4);
+		return coinjs.base58encode(r.concat(checksum));
+	}
+
 	/* provide a scripthash and return address */
 	coinjs.scripthash2address = function(h){
 		var x = Crypto.util.hexToBytes(h);
@@ -1357,7 +1366,7 @@
 			if (utxo_script['type'] == 'scriptpubkey') {
 				address = coinjs.scripthash2address(utxo_script['script'].slice(6, 46));
 			} else if (utxo_script['type'] == 'multisig') {
-				address = coinjs.pubkey2address(utxo_script['script']); // hash the redeemscript
+				address = coinjs.redeemscript2address(utxo_script['script']); // hash the redeemscript
 			} else if (utxo_script['type'] == 'hodl') {
 				alert('Bitcoin Cash hodl addresses not supported yet. Sorry.');
 				return false;
