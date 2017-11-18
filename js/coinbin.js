@@ -119,8 +119,8 @@ $(document).ready(function() {
 				}
 
 				// clone the transaction with out using coinjs.clone() function as it gives us trouble
-				var tx2 = coinjs.transaction(); 
-				var txunspent = tx2.deserialize(tx.serialize()); 
+				var tx2 = coinjs.transaction();
+				var txunspent = tx2.deserialize(tx.serialize());
 
 				// then sign
 				var signed = txunspent.sign($("#walletKeys .privkey").val());
@@ -181,7 +181,7 @@ $(document).ready(function() {
 			if((!isNaN($(amount).val())) && $(amount).val()>0){
 				$(amount).parent().removeClass('has-error');
 			} else {
-				$(amount).parent().addClass('has-error');			
+				$(amount).parent().addClass('has-error');
 			}
 
 			if(coinjs.addressDecode($(address).val())){
@@ -396,7 +396,7 @@ $(document).ready(function() {
 	$('#timeLockedDateTimePicker').datetimepicker({
 		format: "MM/DD/YYYY HH:mm",
 	});
-	
+
 	$('#timeLockedRbTypeBox input').change(function(){
 		if ($('#timeLockedRbTypeDate').is(':checked')){
 			$('#timeLockedDateTimePicker').show();
@@ -588,7 +588,24 @@ $(document).ready(function() {
 
 
 		if(!$("#recipients .row, #inputs .row").hasClass('has-error')){
-			$("#transactionCreate textarea").val(tx.serialize());
+			var valuesBuffer = [];
+			if (coinjs.isBitcoinCash()) {
+				$.each($("#inputs .txIdAmount"), function(i,o){
+					if(isNaN($(o).val())){
+						$(o).parent().addClass('has-error');
+					} else {
+						$(o).parent().removeClass('has-error');
+						var f = 0;
+						if(!isNaN($(o).val())){
+							f += $(o).val()*1;
+						}
+						var valueBI = new BigInteger('' + Math.floor(f * 1e8), 10)
+						valuesBuffer = valuesBuffer.concat(coinjs.numToBytes(valueBI,8));
+					}
+				});
+			}
+			var addedValue = coinjs.isBitcoinCash() ? "|" + Crypto.util.bytesToHex(valuesBuffer) : "";
+			$("#transactionCreate textarea").val(tx.serialize() + addedValue);
 			$("#transactionCreate .txSize").html(tx.size());
 
 			$("#transactionCreate").removeClass("hidden");
@@ -848,7 +865,7 @@ $(document).ready(function() {
 		}
 	}
 
-	/* default function to retreive unspent outputs*/	
+	/* default function to retreive unspent outputs*/
 	function listUnspentDefault(redeem){
 		var tx = coinjs.transaction();
 		tx.listUnspent(redeem.addr, function(data){
@@ -937,7 +954,7 @@ $(document).ready(function() {
 
 	/* retrieve unspent data from chain.so for carboncoin */
 	function listUnspentCryptoidinfo_Carboncoin(redeem) {
-		
+
 		$.ajax ({
 			type: "POST",
 			url: "https://coinb.in/api/",
@@ -1120,8 +1137,8 @@ $(document).ready(function() {
 	});
 
 	// broadcast transaction vai coinbin (default)
-	function rawSubmitDefault(btn){ 
-		var thisbtn = btn;		
+	function rawSubmitDefault(btn){
+		var thisbtn = btn;
 		$(thisbtn).val('Please wait, loading...').attr('disabled',true);
 		$.ajax ({
 			type: "POST",
@@ -1142,7 +1159,7 @@ $(document).ready(function() {
 			},
 			complete: function(data, status) {
 				$("#rawTransactionStatus").fadeOut().fadeIn();
-				$(thisbtn).val('Submit').attr('disabled',false);				
+				$(thisbtn).val('Submit').attr('disabled',false);
 			}
 		});
 	}
@@ -1169,7 +1186,7 @@ $(document).ready(function() {
 			},
 			complete: function(data, status) {
 				$("#rawTransactionStatus").fadeOut().fadeIn();
-				$(thisbtn).val('Submit').attr('disabled',false);				
+				$(thisbtn).val('Submit').attr('disabled',false);
 			}
 		});
 	}
@@ -1201,7 +1218,7 @@ $(document).ready(function() {
 	}
 
 	// broadcast transaction via blockr.io (mainnet)
-	function rawSubmitBlockrio_BitcoinMainnet(thisbtn){ 
+	function rawSubmitBlockrio_BitcoinMainnet(thisbtn){
 		$(thisbtn).val('Please wait, loading...').attr('disabled',true);
 		$.ajax ({
 			type: "POST",
@@ -1213,7 +1230,7 @@ $(document).ready(function() {
 				var r = ' ';
 				r += (obj.data) ? obj.data : '';
 				r += (obj.message) ? ' '+obj.message : '';
-				r = (r!='') ? r : ' Failed to broadcast'; // build response 
+				r = (r!='') ? r : ' Failed to broadcast'; // build response
 				$("#rawTransactionStatus").addClass('alert-danger').removeClass('alert-success').removeClass("hidden").html(r).prepend('<span class="glyphicon glyphicon-exclamation-sign"></span>');
 			},
                         success: function(data) {
@@ -1221,17 +1238,17 @@ $(document).ready(function() {
 					$("#rawTransactionStatus").addClass('alert-success').removeClass('alert-danger').removeClass("hidden").html(' Txid: '+data.data);
 				} else {
 					$("#rawTransactionStatus").addClass('alert-danger').removeClass('alert-success').removeClass("hidden").html(' Unexpected error, please try again').prepend('<span class="glyphicon glyphicon-exclamation-sign"></span>');
-				}				
+				}
 			},
 			complete: function(data, status) {
 				$("#rawTransactionStatus").fadeOut().fadeIn();
-				$(thisbtn).val('Submit').attr('disabled',false);				
+				$(thisbtn).val('Submit').attr('disabled',false);
 			}
 		});
 	}
 
 	// broadcast transaction via blockr.io (mainnet)
-	function rawSubmitChainso_BitcoinMainnet(thisbtn){ 
+	function rawSubmitChainso_BitcoinMainnet(thisbtn){
 		$(thisbtn).val('Please wait, loading...').attr('disabled',true);
 		$.ajax ({
 			type: "POST",
@@ -1242,7 +1259,7 @@ $(document).ready(function() {
 				var obj = $.parseJSON(data.responseText);
 				var r = ' ';
 				r += (obj.data.tx_hex) ? obj.data.tx_hex : '';
-				r = (r!='') ? r : ' Failed to broadcast'; // build response 
+				r = (r!='') ? r : ' Failed to broadcast'; // build response
 				$("#rawTransactionStatus").addClass('alert-danger').removeClass('alert-success').removeClass("hidden").html(r).prepend('<span class="glyphicon glyphicon-exclamation-sign"></span>');
 			},
                         success: function(data) {
@@ -1250,17 +1267,17 @@ $(document).ready(function() {
 					$("#rawTransactionStatus").addClass('alert-success').removeClass('alert-danger').removeClass("hidden").html(' Txid: '+data.data.txid);
 				} else {
 					$("#rawTransactionStatus").addClass('alert-danger').removeClass('alert-success').removeClass("hidden").html(' Unexpected error, please try again').prepend('<span class="glyphicon glyphicon-exclamation-sign"></span>');
-				}				
+				}
 			},
 			complete: function(data, status) {
 				$("#rawTransactionStatus").fadeOut().fadeIn();
-				$(thisbtn).val('Submit').attr('disabled',false);				
+				$(thisbtn).val('Submit').attr('disabled',false);
 			}
 		});
 	}
 
 	// broadcast transaction via blockcypher.com (mainnet)
-	function rawSubmitblockcypher_BitcoinMainnet(thisbtn){ 
+	function rawSubmitblockcypher_BitcoinMainnet(thisbtn){
 		$(thisbtn).val('Please wait, loading...').attr('disabled',true);
 		$.ajax ({
 			type: "POST",
@@ -1270,7 +1287,7 @@ $(document).ready(function() {
 				var obj = $.parseJSON(data.responseText);
 				var r = ' ';
 				r += (obj.error) ? obj.error : '';
-				r = (r!='') ? r : ' Failed to broadcast'; // build response 
+				r = (r!='') ? r : ' Failed to broadcast'; // build response
 				$("#rawTransactionStatus").addClass('alert-danger').removeClass('alert-success').removeClass("hidden").html(r).prepend('<span class="glyphicon glyphicon-exclamation-sign"></span>');
 			},
                         success: function(data) {
@@ -1282,13 +1299,13 @@ $(document).ready(function() {
 			},
 			complete: function(data, status) {
 				$("#rawTransactionStatus").fadeOut().fadeIn();
-				$(thisbtn).val('Submit').attr('disabled',false);				
+				$(thisbtn).val('Submit').attr('disabled',false);
 			}
 		});
 	}
 
 	// broadcast transaction via blockr.io for litecoin
-	function rawSubmitBlockrio_litecoin(thisbtn){ 
+	function rawSubmitBlockrio_litecoin(thisbtn){
 		$(thisbtn).val('Please wait, loading...').attr('disabled',true);
 		$.ajax ({
 			type: "POST",
@@ -1300,7 +1317,7 @@ $(document).ready(function() {
 				var r = ' ';
 				r += (obj.data) ? obj.data : '';
 				r += (obj.message) ? ' '+obj.message : '';
-				r = (r!='') ? r : ' Failed to broadcast'; // build response 
+				r = (r!='') ? r : ' Failed to broadcast'; // build response
 				$("#rawTransactionStatus").addClass('alert-danger').removeClass('alert-success').removeClass("hidden").html(r).prepend('<span class="glyphicon glyphicon-exclamation-sign"></span>');
 			},
                         success: function(data) {
@@ -1312,14 +1329,14 @@ $(document).ready(function() {
 			},
 			complete: function(data, status) {
 				$("#rawTransactionStatus").fadeOut().fadeIn();
-				$(thisbtn).val('Submit').attr('disabled',false);				
+				$(thisbtn).val('Submit').attr('disabled',false);
 			}
 		});
 	}
 
 
 	// broadcast transaction via chain.so for dogecoin
-	function rawSubmitchainso_dogecoin(thisbtn){ 
+	function rawSubmitchainso_dogecoin(thisbtn){
 		$(thisbtn).val('Please wait, loading...').attr('disabled',true);
                 $.ajax ({
                         type: "POST",
@@ -1330,7 +1347,7 @@ $(document).ready(function() {
 				var obj = $.parseJSON(data.responseText);
 				var r = ' ';
 				r += (obj.data.tx_hex) ? ' '+obj.data.tx_hex : '';
-				r = (r!='') ? r : ' Failed to broadcast'; // build response 
+				r = (r!='') ? r : ' Failed to broadcast'; // build response
 				$("#rawTransactionStatus").addClass('alert-danger').removeClass('alert-success').removeClass("hidden").html(r).prepend('<span class="glyphicon glyphicon-exclamation-sign"></span>');
 			//	console.error(JSON.stringify(data, null, 4));
                         },
@@ -1344,7 +1361,7 @@ $(document).ready(function() {
 			},
 			complete: function(data, status) {
 				$("#rawTransactionStatus").fadeOut().fadeIn();
-				$(thisbtn).val('Submit').attr('disabled',false);				
+				$(thisbtn).val('Submit').attr('disabled',false);
                         }
                 });
 	}
@@ -1611,6 +1628,12 @@ $(document).ready(function() {
 			$(wifkey).parent().addClass('has-error');
 		}
 
+		if(script.indexOf("|") >= 0){
+			var splitScript = script.split("|");
+			var valuesBufferHex = splitScript[1];
+			script = splitScript[0];
+		}
+
 		if((script.val()).match(/^[a-f0-9]+$/ig)){
 			$(script).parent().removeClass('has-error');
 		} else {
@@ -1622,6 +1645,14 @@ $(document).ready(function() {
 			try {
 				var tx = coinjs.transaction();
 				var t = tx.deserialize(script.val());
+
+				if (valuesBufferHex) {
+					for (var i = 0; i < t.ins.length; i++) {
+						var thisValueBuffer = Crypto.util.hexToBytes(valuesBufferHex.slice(0,16));
+						valuesBufferHex = valuesBufferHex.slice(16)
+						t.ins[i].value = coinjs.bytesToNum(thisValueBuffer)
+					}
+				}
 
 				var signed = t.sign(wifkey.val(), $("#sighashType option:selected").val());
 				$("#signedData textarea").val(signed);
@@ -1750,7 +1781,7 @@ $(document).ready(function() {
 	$("#coinjs_multisig").val('0x'+(coinjs.multisig).toString(16));
 
 	$("#coinjs_hdpub").val('0x'+(coinjs.hdkey.pub).toString(16));
-	$("#coinjs_hdprv").val('0x'+(coinjs.hdkey.prv).toString(16));	
+	$("#coinjs_hdprv").val('0x'+(coinjs.hdkey.prv).toString(16));
 
 	$("#settingsBtn").click(function(){
 
@@ -1778,9 +1809,9 @@ $(document).ready(function() {
 			configureBroadcast();
 			configureGetUnspentTx();
 
-			$("#statusSettings").addClass("alert-success").removeClass("hidden").html("<span class=\"glyphicon glyphicon-ok\"></span> Settings updates successfully").fadeOut().fadeIn();	
+			$("#statusSettings").addClass("alert-success").removeClass("hidden").html("<span class=\"glyphicon glyphicon-ok\"></span> Settings updates successfully").fadeOut().fadeIn();
 		} else {
-			$("#statusSettings").addClass("alert-danger").removeClass("hidden").html("There is an error with one or more of your settings");	
+			$("#statusSettings").addClass("alert-danger").removeClass("hidden").html("There is an error with one or more of your settings");
 		}
 	});
 
@@ -1791,7 +1822,7 @@ $(document).ready(function() {
 		// deal with broadcasting settings
 		if(o[5]=="false"){
 			$("#coinjs_broadcast, #rawTransaction, #rawSubmitBtn, #openBtn").attr('disabled',true);
-			$("#coinjs_broadcast").val("coinb.in");			
+			$("#coinjs_broadcast").val("coinb.in");
 		} else {
 			$("#coinjs_broadcast").val(o[5]);
 			$("#coinjs_broadcast, #rawTransaction, #rawSubmitBtn, #openBtn").attr('disabled',false);
@@ -1799,7 +1830,7 @@ $(document).ready(function() {
 
 		// deal with unspent output settings
 		if(o[6]=="false"){
-			$("#coinjs_utxo, #redeemFrom, #redeemFromBtn, #openBtn, .qrcodeScanner").attr('disabled',true);			
+			$("#coinjs_utxo, #redeemFrom, #redeemFromBtn, #openBtn, .qrcodeScanner").attr('disabled',true);
 			$("#coinjs_utxo").val("coinb.in");
 		} else {
 			$("#coinjs_utxo").val(o[6]);

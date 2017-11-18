@@ -1,4 +1,4 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>
 <html lang="en">
 	<head>
 
@@ -14,7 +14,7 @@
 		<link rel="stylesheet" href="css/bootstrap.min.css" media="screen">
 		<link rel="stylesheet" href="css/bootstrap-datetimepicker.min.css">
 		<link rel="stylesheet" href="css/style.css" media="screen">
-		
+
 		<script type="text/javascript" src="js/jquery-1.9.1.min.js"></script>
 		<script type="text/javascript" src="js/moment.min.js"></script>
 		<script type="text/javascript" src="js/transition.js"></script>
@@ -144,7 +144,7 @@
 										<p>Use the form below to open a wallet and begin using this service.</p>
 
 										<div class="alert alert-warning">
-											<b>Notice</b>: Different email address and password combination will open different wallets, be careful when entering your details as lost accounts can not be recovered! 
+											<b>Notice</b>: Different email address and password combination will open different wallets, be careful when entering your details as lost accounts can not be recovered!
 										</div>
 
 										<input id="openEmail" type="email" class="form-control" placeholder="Email address" required autofocus>
@@ -451,14 +451,14 @@
                         </div>
 
                         <p id="timeLockedRbTypeBox">
-                        	Enter the 
-                        		<input type="radio" id="timeLockedRbTypeDate" name="timeLockedRbType" value="date" checked="checked"> 
-                        		<label for="timeLockedRbTypeDate">date and time</label> 
-                        		or                         		
+                        	Enter the
+                        		<input type="radio" id="timeLockedRbTypeDate" name="timeLockedRbType" value="date" checked="checked">
+                        		<label for="timeLockedRbTypeDate">date and time</label>
+                        		or
                         		<input type="radio" id="timeLockedRbTypeBlockHeight" name="timeLockedRbType" value="blockheight">
                         		<label for="timeLockedRbTypeBlockHeight">blockheight</label>
 
-                        		required to release the coins: 
+                        		required to release the coins:
                         </p>
                         <div class="row">
                             <div class='col-md-6'>
@@ -526,7 +526,7 @@
 
 						<h3>Address Options</h3>
 						<p>You can use the advanced options below to generate different kinds of master addresses.</p>
-						
+
 						<div class="checkbox">
 							<label><input type="checkbox" id="newHDBrainwallet" class="checkbox-inline"> Custom Seed or Brain Wallet</label>
 							<input type="text" class="form-control hidden" id="HDBrainwallet">
@@ -570,7 +570,7 @@
 
 								<label>Null Data</label> <span class="text-muted text-normal">(80 byte limit, <i>40 bytes recommended</i>)</span>
 								<p class="checkbox">
-									<label><input type="checkbox" id="opReturn" class="checkbox-inline"> Allow data to be sent within the transaction and stored in the blockchain by using <a href="https://bitcoin.org/en/developer-guide#null-data" target="_"blank">OP_RETURN</a>.</label>
+									<label><input type="checkbox" id="opReturn" class="checkbox-inline"> Allow data to be sent within the transaction and stored in the blockchain by using <a href="https://bitcoin.org/en/developer-guide#null-data" target="_blank">OP_RETURN</a>.</label>
 									<div class="text-muted">When using this option you may enter a hex string or address into the address field on the output tab.</div>
 								</p>
 
@@ -747,7 +747,7 @@
     								</table>
 								<br>
 							</div>
-	
+
 							<div class="hidden verifyData" id="verifyRsDataSegWit">
 				                               	<label>Segwit Address</label>
    								<div class="row">
@@ -1008,7 +1008,7 @@
 							<p>The above transaction has been signed:</p>
 
                         				<textarea class="form-control script" style="height:160px" readonly></textarea>
-                                    
+
 							<p class="text-muted">Size: <span class="txSize">0</span> <i>bytes</i></p>
 						</div>
 
@@ -1031,7 +1031,7 @@
 					<div class="tab-pane tab-content" id="dev">
 						<h2>Development <small>Javascript framework, API and more</small></h2>
 						<div class="alert alert-info">This section is currently under development and is subject to change.</div>
-						
+
 					</div>
 
 					<div class="tab-pane tab-content" id="about">
@@ -1134,7 +1134,7 @@
 								</select>
 							</div>
 						</div>
-							
+
 						<hr>
 
 						<div class="row">
@@ -1269,9 +1269,9 @@
 						<div class="col-md-5">
 							<label>Mediator:</label>
 
-							<!-- 
-								You need to contact us before adding your pubkey 
-								and submitting a pull request on github. 
+							<!--
+								You need to contact us before adding your pubkey
+								and submitting a pull request on github.
 
 								format is: pubkey;email;fee
 							-->
@@ -1283,12 +1283,12 @@
 
 						<div class="col-md-5">
 							<label>Address:</label> <span class="text-muted">(for disputes)</span>
-							<input id="mediatorEmail" type="text" class="form-control address" value="" readonly>	
+							<input id="mediatorEmail" type="text" class="form-control address" value="" readonly>
 						</div>
 
 						<div class="col-md-2">
-							<label>Fee (%):</label> 
-							<input id="mediatorFee" type="text" class="form-control address" value="" readonly>	
+							<label>Fee (%):</label>
+							<input id="mediatorFee" type="text" class="form-control address" value="" readonly>
 						</div>
 
 					</div>
