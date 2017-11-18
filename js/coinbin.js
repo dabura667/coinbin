@@ -704,8 +704,24 @@ $(document).ready(function() {
 
 
 		if(!$("#recipients .row, #inputs .row").hasClass('has-error')){
-			
-			$("#transactionCreate textarea").val(tx.serialize());
+			var valuesBuffer = [];
+			if (coinjs.isBitcoinCash()) {
+				$.each($("#inputs .txIdAmount"), function(i,o){
+					if(isNaN($(o).val())){
+						$(o).parent().addClass('has-error');
+					} else {
+						$(o).parent().removeClass('has-error');
+						var f = 0;
+						if(!isNaN($(o).val())){
+							f += $(o).val()*1;
+						}
+						var valueBI = new BigInteger('' + Math.floor(f * 1e8), 10)
+						valuesBuffer = valuesBuffer.concat(coinjs.numToBytes(valueBI,8));
+					}
+				});
+			}
+			var addedValue = coinjs.isBitcoinCash() ? "|" + Crypto.util.bytesToHex(valuesBuffer) : "";
+			$("#transactionCreate textarea").val(tx.serialize() + addedValue);
 			$("#transactionCreate .txSize").html(tx.size());
 
 			if($("#feesestnewtx").attr('est')=='y'){
@@ -1795,6 +1811,12 @@ $(document).ready(function() {
 			$(wifkey).parent().addClass('has-error');
 		}
 
+		if(script.indexOf("|") >= 0){
+			var splitScript = script.split("|");
+			var valuesBufferHex = splitScript[1];
+			script = splitScript[0];
+		}
+
 		if((script.val()).match(/^[a-f0-9]+$/ig)){
 			$(script).parent().removeClass('has-error');
 		} else {
@@ -1806,6 +1828,14 @@ $(document).ready(function() {
 			try {
 				var tx = coinjs.transaction();
 				var t = tx.deserialize(script.val());
+
+				if (valuesBufferHex) {
+					for (var i = 0; i < t.ins.length; i++) {
+						var thisValueBuffer = Crypto.util.hexToBytes(valuesBufferHex.slice(0,16));
+						valuesBufferHex = valuesBufferHex.slice(16)
+						t.ins[i].value = coinjs.bytesToNum(thisValueBuffer)
+					}
+				}
 
 				var signed = t.sign(wifkey.val(), $("#sighashType option:selected").val());
 				$("#signedData textarea").val(signed);
