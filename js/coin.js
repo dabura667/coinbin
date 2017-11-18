@@ -433,6 +433,11 @@
 		return result_txt;
 	};
 
+	coinjs.isBitcoinCash = function() {
+		var host = $("#coinjs_broadcast option:selected").val();
+		return (host == 'blockdozer.com_bitcoincash')
+	}
+
 	/* start of hd functions, thanks bip32.org */
 	coinjs.hd = function(data){
 
@@ -1267,8 +1272,7 @@
 				return sequence;
 			}
 
-			var host = $("#coinjs_broadcast option:selected").val();
-			var isBitcoinCash = (host == 'blockdozer.com_bitcoincash')
+			var isBitcoinCash = coinjs.isBitcoinCash();
 
 			var shType = sigHashType || 1;
 
