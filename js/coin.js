@@ -1082,37 +1082,41 @@
 
 		r.getInputValues = function() {
 			var self = this;
-			for (var i = 0; i < self.ins.length; i++) {
-				var utxo_txid = self.ins[i].outpoint.hash;
-				var utxo_index = self.ins[i].outpoint.index;
+			self.ins.forEach(function(input, i) {
+				var utxo_txid = input.outpoint.hash;
+				var utxo_index = input.outpoint.index;
 				var utxo_address = self.extractAddress(i);
-				$.ajax ({
-					type: "GET",
-					cache: false,
-					async: false,
-					url: "http://blockdozer.com/insight-api/addr/"+utxo_address+"/utxo",
-					dataType: "json",
-					error: function(data) {
-						alert('Couldn\'t get values for inputs. Bitcoin Cash will not sign correctly.');
-					},
-					success: function(data) {
-						if(data[0] == undefined)
-						{
-							alert('Can not retreive input values for Bitcoin Cash signatures.');
-						}
-						if((data[0].address && data[0].txid) && data[0].address==utxo_address){
-							for(var i in data){
-								if (utxo_txid == data[i].txid
-								&& utxo_index == data[i].vout) {
-									self.ins[i].value = new BigInteger('' + Math.round((data[i].amount*1) * 1e8), 10);
-								}
+				if (!input.value) {
+					$.ajax ({
+						type: "GET",
+						cache: false,
+						async: false,
+						url: "http://blockdozer.com/insight-api/addr/"+utxo_address+"/utxo",
+						dataType: "json",
+						error: function(data) {
+							alert('Couldn\'t get values for inputs. Bitcoin Cash will not sign correctly.');
+						},
+						success: function(data) {
+							if(data[0] == undefined)
+							{
+								alert('Can not retreive input values for Bitcoin Cash signatures.');
 							}
-						} else {
-							alert('Can not retreive input values for Bitcoin Cash signatures.');
+							if((data[0].address && data[0].txid) && data[0].address === utxo_address) {
+								data.forEach(function(unspent) {
+									self.ins.forEach(function(input) {
+										if (input.outpoint.hash  === unspent.txid
+										&&  input.outpoint.index === unspent.vout) {
+											input.value = new BigInteger('' + Math.round((unspent.amount*1) * 1e8), 10);
+										}
+									})
+								});
+							} else {
+								alert('Can not retreive input values for Bitcoin Cash signatures.');
+							}
 						}
-					}
-				});
-			}
+					});
+				}
+			});
 		}
 		/* generate a segwit transaction hash to sign from a transaction input */
 		r.transactionHashSegWitV0 = function(index, sigHashType){
@@ -1277,11 +1281,8 @@
 			if (coinjs.isBitcoinCash()) {
 				/* Add SIGHASH_FORKID by default for Bitcoin Cash */
 				shType = shType | 0x40;
-				for (var i = 0; i < this.ins.length; i++) {
-					if (this.ins[i].value == undefined) {
-						this.getInputValues()
-					}
-				}
+
+				this.getInputValues();
 			}
 
 			var hash = txhash || Crypto.util.hexToBytes(this.transactionHash(index, shType));
