@@ -4,18 +4,24 @@
 
 		<title>Bitcoin Wallet by Coinb.in</title>
 
-        	<meta http-equiv="content-type" content="text/html;charset=utf-8" />
-		<meta name="keywords" content="bitcoin, wallet, multisig, multisignature, address, browser, javascript, js, broadcast, transaction, verify, decode" />
-		<meta name="description" content="A Bitcoin Wallet written in Javascript. Supports Multisig, Custom Transactions, nLockTime and more!" />
+		<meta http-equiv="content-type" content="text/html;charset=utf-8" />
+		<meta name="keywords" content="bitcoin, wallet, multisig, multisignature, address, browser, segwit, javascript, js, broadcast, transaction, verify, decode" />
+		<meta name="description" content="A Bitcoin Wallet written in Javascript. Supports Multisig, SegWit, Custom Transactions, nLockTime and more!" />
 
 		<meta http-equiv="X-UA-Compatible" content="IE=edge">
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 		<link rel="stylesheet" href="css/bootstrap.min.css" media="screen">
+		<link rel="stylesheet" href="css/bootstrap-datetimepicker.min.css">
 		<link rel="stylesheet" href="css/style.css" media="screen">
 		
 		<script type="text/javascript" src="js/jquery-1.9.1.min.js"></script>
+		<script type="text/javascript" src="js/moment.min.js"></script>
+		<script type="text/javascript" src="js/transition.js"></script>
+		<script type="text/javascript" src="js/collapse.js"></script>
+
 		<script type="text/javascript" src="js/bootstrap.min.js"></script>
+		<script type="text/javascript" src="js/bootstrap-datetimepicker.min.js"></script>
 
 		<script type="text/javascript" src="js/crypto-min.js"></script>
 		<script type="text/javascript" src="js/crypto-sha256.js"></script>
@@ -52,8 +58,10 @@
 							<li class="dropdown">
 								<a href="#" class="dropdown-toggle" data-toggle="dropdown"><span class="glyphicon glyphicon-plus"></span> New<b class="caret"></b></a>
 								<ul class="dropdown-menu">
-									<li><a href="#newAddress" data-toggle="tab">New Address</a></li>
+									<li><a href="#newAddress" data-toggle="tab">Address</a></li>
+									<li><a href="#newSegWit" data-toggle="tab">SegWit Address</a></li>
 									<li><a href="#newMultiSig" data-toggle="tab">MultiSig Address</a></li>
+									<li><a href="#newTimeLocked" data-toggle="tab">Time Locked Address</a></li>
 									<li><a href="#newHDaddress" data-toggle="tab">HD Address</a></li>
 									<li class="divider"></li>
 									<li><a href="#newTransaction" data-toggle="tab">Transaction</a></li>
@@ -66,6 +74,7 @@
 							<li><a href="#about" data-toggle="tab"><span class="glyphicon glyphicon-info-sign"></span> About</a></li>
 
 							<li class="hidden"><a href="#settings" data-toggle="tab"><span class="glyphicon glyphicon-cog"></span> Settings</a></li>
+							<li class="hidden"><a href="#fees" data-toggle="tab"><span class="glyphicon glyphicon-tag"></span> Fees</a></li>
 						</ul>
 					</div>
 				</div>
@@ -94,7 +103,7 @@
 						<div class="row">
 							<div class="col-md-4">
 								<h3><span class="glyphicon glyphicon-ok"></span> Open Source</h3>
-								<p>Coinbin is an open source web based wallet written in javascript and released under the <a href="LICENSE">MIT license</a> which means its free to use and edit.</p>
+								<p>Coinbin is an open source web based wallet written in javascript and released under the <a href="LICENSE">MIT license</a> which means it's free to use and edit.</p>
 							</div>
 
 							<div class="col-md-4">
@@ -111,12 +120,12 @@
 						<div class="row">
 							<div class="col-md-4">
 								<h3><span class="glyphicon glyphicon-piggy-bank"></span> Wallet</h3>
-								<p>Quick access to an <a href="#wallet">online wallet</a> where only you have access to your own private keys!</p>
+								<p>Quick access to an <a href="#wallet">online wallet</a> where only you have access to your own private keys &amp; can <a href="#fees">calculate your own fee</a>!</p>
 							</div>
 
 							<div class="col-md-4">
 								<h3><span class="glyphicon glyphicon-globe"></span> Addresses</h3>
-								<p>We support <a href="#newAddress">regular addresses</a> but also <a href="#newMultiSig">multisig</a> and stealth, and access to your own private keys!</p>
+								<p>We support <a href="#newAddress">regular addresses</a>, <a href="#newMultiSig">multisig</a>, <a href="#newSegWit">segwit</a> and stealth all with access to your own private keys!</p>
 							</div>
 
 							<div class="col-md-4">
@@ -143,6 +152,22 @@
 										<input id="openPass" type="password" class="form-control" placeholder="Password" required>
 										<input id="openPassConfirm" type="password" class="form-control" placeholder="Password confirm" required>
 										<br>
+
+										<div>
+											<a href="javascript:;" class="optionsCollapse"><div class="well well-sm"><span class="glyphicon glyphicon-collapse-down" id="glyphcollapse"></span> Advanced Options</div></a>
+											<div class="hidden optionsAdvanced">
+												<label>Segregated Witness Address</label>
+												<p class="checkbox">
+													<label><input type="checkbox" id="walletSegwit" class="checkbox-inline" checked> Use a segwit address instead of a regular address. <span class="text-muted"><i>(recommended)</i></span></label></label>
+												</p>
+
+												<label>Enable Replace by Fee (RBF)</label>
+												<p class="checkbox">
+													<label><input type="checkbox" id="walletRBF" class="checkbox-inline" checked> Enable RBF on all transactions, allowing you to manually raise the transaction fee later if required. <span class="text-muted"><i>(recommended)</i></span></label></label>
+												</p>
+											</div>
+										</div>
+
 										<div id="openLoginStatus" class="alert alert-danger hidden"></div>
 										<button id="openBtn" class="btn btn-primary" type="submit">Submit</button>
 									</form>
@@ -157,7 +182,15 @@
 											<div id="walletQrCode"></div> <br>
 											<div>
 												<span id="walletLoader" class="hidden"><img src="images/loader.gif"></span>
-												<span id="walletAddress"></span>
+												<span id="walletAddress"></span> 
+
+												<div class="btn-group">
+													<button type="button" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown" id="walletToBtn">SegWit <span class="caret"></span></button>
+													<ul class="dropdown-menu">
+														<li><a href="javascript:;" id="walletToSegWit">SegWit</a></li>
+														<li><a href="javascript:;" id="walletToLegacy">Legacy</a></li>
+													</ul>
+												</div>
 											</div>
 											<br>
 											<div style="text-align:center; width:350px;">
@@ -165,6 +198,7 @@
 													<li role="presentation" class="active"><a href="javascript:;" id="walletBalance">0.00 BTC</a></li>
 													<li role="presentation"><a href="javascript:;" id="walletShowSpend">Spend</a></li>
 													<li role="presentation"><a id="walletHistory" href="javascript:;" target="_blank">History</a></li>
+													<li role="presentation"><a href="https://localbitcoins.com/?ch=173j" target="_blank">Buy</a></li>
 													<li role="presentation"><a href="javascript:;" id="walletShowKeys">Keys</a></li>
 												</ul>
 
@@ -173,6 +207,12 @@
 												<div id="walletKeys" class="hidden">
 													<label>Public Key</label>
 													<input class="form-control pubkey" type="text" readonly>
+
+													<div class="walletSegWitRS hidden">
+														<label>Redeem Script <i>(SegWit)</i></label>
+														<input class="form-control" type="text" readonly>
+													</div>
+
 													<label>Private key</label>
 													<div class="input-group">
 														<input class="form-control privkey" type="password" readonly>
@@ -181,6 +221,7 @@
 															<button class="showKey btn btn-default" type="button">Show</button>
 														</span>
 													</div>
+
 													<label>Private Key (AES256 encrypted key)</label>
 													<input class="form-control privkeyaes" type="text" readonly>
 												</div>
@@ -214,12 +255,12 @@
 													</div>
 													<div class="row">
 														<div class="col-xs-6">
-															<label><abbr title="the amount to pay in network miner fees - 0.0001 or more recommended">Transaction Fee</abbr></label>
-															<input type="text" class="form-control" value="0.00001" id="txFee">
+															<label><abbr title="the amount to pay in network miner fee">Transaction Fee</abbr>&nbsp;&nbsp;<a href="javascript:;" id="feesestwallet"><span class="glyphicon glyphicon-question-sign"></span></a></label>
+															<input type="text" class="form-control" value="0.0004" id="txFee">
 														</div>
 														<div class="col-xs-5">
 															<label><abbr title="the amount to donate to coinb.in">Donation</abbr></label>
-															<input type="text" class="form-control" value="0.001" id="developerDonation">
+															<input type="text" class="form-control" value="0.003" id="developerDonation">
 														</div>
 													</div>
 													<br>
@@ -298,11 +339,64 @@
 						<br>
 					</div>
 
+					<div class="tab-pane tab-content" id="newSegWit">
+						<h2>New SegWit Address <small> Smaller &amp; Faster Transactions</small></h2>
+
+						<p>Any keys used you will need to manually store safely as they will be needed later to redeem the bitcoins.</p>
+
+						<label>SegWit Address (Share)</label>
+
+						<div class="input-group">
+							<input id="newSegWitAddress" type="text" class="form-control address" value="" readonly>
+							<span class="input-group-btn">
+								<button class="qrcodeBtn btn btn-default" type="button" data-toggle="modal" data-target="#modalQrcode"><span class="glyphicon glyphicon-qrcode"></span></button>
+							</span>
+						</div>
+
+						<label>RedeemScript</label>
+						<input id="newSegWitRedeemScript" type="text" class="form-control" readonly>
+
+						<label>Public key</label>
+						<input id="newSegWitPubKey" type="text" class="form-control" readonly>
+
+						<label>Private key (WIF key)</label>
+						<div class="input-group">
+							<input id="newSegWitPrivKey" type="password" class="form-control" value="" readonly>
+							<span class="input-group-btn">
+								<button class="showKey btn btn-default" type="button">Show</button>
+							</span>
+						</div>
+
+
+						<h3>Address Options</h3>
+						<p>You can use the advanced options below to generate different kind of keys and addresses.</p>
+
+						<div class="checkbox">
+							<label><input type="checkbox" id="newSegWitBrainwallet" class="checkbox-inline"> Custom Seed or Brain Wallet</label>
+							<input type="text" class="form-control hidden" id="brainwalletSegWit">
+						</div>
+
+						<input type="button" class="btn btn-primary" value="Generate" id="newSegWitKeysBtn">
+						<br>
+					</div>
+
 					<div class="tab-pane tab-content" id="newMultiSig">
 						<h2>New Multisig Address <small>Secure multisig address</small></h2>
 
-						<p>Public keys can be <a href="#newAddress">generated in your browser</a> or from your bitcoin client</a>.</p>
-						<p>Enter the public keys of all the participants, to create a <a href="https://en.bitcoin.it/wiki/Address#Multi-signature_addresses" target="_blank">multi signature address</a>. Maximum of 15 allowed. Compressed and uncompressed public keys are accepted.</p>
+						<div class="row">
+
+							<div class="col-md-8">
+								<p>Public keys can be <a href="#newAddress">generated in your browser</a> or from your bitcoin client</a>.</p>
+								<p>Enter the public keys of all the participants, to create a <a href="https://en.bitcoin.it/wiki/Address#Multi-signature_addresses" target="_blank">multi signature address</a>. Maximum of 15 allowed. Compressed and uncompressed public keys are accepted.</p>
+							</div>
+
+							<div class="col-md-3">
+								<p class="alert alert-info"><span class="glyphicon glyphicon-info-sign"></span> <a href="javascript:;" data-toggle="modal" data-target="#modalMediator"><abbr>Need a Mediator?</abbr></a></p>
+							</div>
+
+							<div class="col-md-1">
+							</div>
+						</div>
 
 						<div id="multisigPubKeys" class="row">
 							<div class="form-horizontal">
@@ -358,12 +452,89 @@
 							<p>This script should be <i>saved and should be shared with all the participants before a payment is made</i>, so they may validate the authenticity of the address, it will also be used later to release the bitcoins.</p>
 							<textarea class="form-control script" style="height:160px" readonly></textarea>
 							<label>Shareable URL</label>
-							<input type="text" class="scriptUrl form-control" disabled>
+							<input type="text" class="scriptUrl form-control" readonly>
 						</div>
 
 						<input type="button" class="btn btn-primary" value="Submit" id="newMultiSigAddress">
 						<br>
 					</div>
+
+                    <div class="tab-pane tab-content" id="newTimeLocked">
+                        <h2>New Time Locked Address <small>Coins can be released only after a certain date</small></h2>
+
+                        <div class="row">
+
+                            <div class="col-md-11">
+				<p>Use <i><a href="https://github.com/bitcoin/bips/blob/master/bip-0065.mediawiki" target="_blank">OP_CHECKLOCKTIMEVERIFY</a></i> (OP_HODL) to create a time locked address where the funds are unspendable until a set date and time has passed.</p>
+                                <p>Public keys can be <a href="#newAddress">generated in your browser</a> or from your bitcoin client</a>.</p>
+                                <p>Enter the public key that will be able to unlock the funds after the a certain date.
+                            </div>
+
+                            <div class="col-md-1">
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="form-horizontal">
+                                <div class="col-xs-12">
+                                    <input id="timeLockedPubKey" type="text" class="form-control pubkey">
+                                </div>
+                            </div>
+                        </div>
+
+                        <p id="timeLockedRbTypeBox">
+                        	Enter the 
+                        		<input type="radio" id="timeLockedRbTypeDate" name="timeLockedRbType" value="date" checked="checked"> 
+                        		<label for="timeLockedRbTypeDate">date and time</label> 
+                        		or                         		
+                        		<input type="radio" id="timeLockedRbTypeBlockHeight" name="timeLockedRbType" value="blockheight">
+                        		<label for="timeLockedRbTypeBlockHeight">blockheight</label>
+
+                        		required to release the coins: 
+                        </p>
+                        <div class="row">
+                            <div class='col-md-6'>
+                                <div class="form-group">
+                                    <div class='input-group date' id='timeLockedDateTimePicker'>
+                                        <input type='text' class="form-control" placeholder="MM/DD/YYYY hh:mm" />
+                                        <span class="input-group-addon">
+                                            <span class="glyphicon glyphicon-calendar"></span>
+                                        </span>
+                                    </div>
+                                    <div class='input-group hidden' id='timeLockedBlockHeight'>
+                                        <input type='text' id='timeLockedBlockHeightVal' class="form-control" placeholder="Blockheight" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <br>
+
+                        <div id="timeLockedErrorMsg" class="alert alert-danger" style="display:none;"></div>
+
+                        <div class="alert alert-success hidden" id="timeLockedData">
+                            <label>Address</label>
+                            <p>Payment should be made to this address:</p>
+                            <div class="row">
+                                <div class="col-lg-6">
+                                    <div class="input-group">
+                                        <input type="text" class="form-control address" value="" readonly>
+                                        <span class="input-group-btn">
+                                            <button class="qrcodeBtn btn btn-default" type="button" data-toggle="modal" data-target="#modalQrcode"><span class="glyphicon glyphicon-qrcode"></span></button>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <label>Redeem Script</label>
+                            <p>This script should be <i>saved and should be shared with all the participants before a payment is made</i>, so they may validate the authenticity of the address, it will also be used later to release the bitcoins.</p>
+                            <textarea class="form-control script" style="height:160px" readonly></textarea>
+                            <label>Shareable URL</label>
+                            <input type="text" class="scriptUrl form-control" readonly>
+                        </div>
+
+                        <input type="button" class="btn btn-primary" value="Submit" id="newTimeLockedAddress">
+                        <br>
+                    </div>
 
 					<div class="tab-pane tab-content" id="newHDaddress">
 						<h2>New HD Address <small>making bip32 even easier</small></h2>
@@ -400,7 +571,7 @@
 						<h2>Transaction <small>Create a new transaction</small></h2>
 						<p>Use this page to create a raw transaction</p>
 
-						<b>Address, WIF key or Multisig Redeem Script</b>:
+						<b>Address, WIF key or Redeem Script</b>:
 						<div class="input-group">
 							<span class="input-group-btn">
 								<button class="btn btn-info qrcodeScanner" type="button" data-toggle="modal" data-target="#modalQrcodeScanner" forward-result="#redeemFrom"><span class="glyphicon glyphicon-camera"></span></button>
@@ -418,9 +589,9 @@
 						<div class="hidden alert alert-info" id="redeemFromAddress"></div>
 
 						<div>
-							<a href="javascript:;" id="optionsCollapse"><div class="well well-sm"><span class="glyphicon glyphicon-collapse-down" id="glyphcollapse"></span> Advanced Options</div></a>
+							<a href="javascript:;" class="optionsCollapse"><div class="well well-sm"><span class="glyphicon glyphicon-collapse-down" id="glyphcollapse"></span> Advanced Options</div></a>
 
-							<div class="hidden" id="optionsAdvanced">
+							<div class="hidden optionsAdvanced">
 
 								<label>Clear Inputs</label>
 								<p class="checkbox">
@@ -444,6 +615,13 @@
 								<hr>
 
 
+								<label>Replace By Fee (RBF)</label>
+								<p class="checkbox">
+									<label><input type="checkbox" id="txRBF" class="checkbox-inline"> Make this a <a href="https://en.bitcoin.it/wiki/Transaction_replacement" target="_blank">RBF transaction</a>.</label>
+								</p>
+
+								<hr>
+
 								<label>Network</label>
 								<p>The <a href="#settings">settings</a> page can be used to select alternative networks of which you can retrieve your unspent outputs and broadcast a signed transaction into.</p>
 
@@ -459,7 +637,11 @@
 						<br>
 
 						<div class="tab-content">
+
 							<div class="tab-pane fade in active" id="txoutputs">
+
+								<span class="pull-right"><a href="javascript:;" id="donateTxBtn" class="btn btn-link"><span class="glyphicon glyphicon-heart"></span> Donate!</a></span>
+
 								<p>Enter the address and amount you wish to make a payment to.</p>
 								<div class="row">
 									<div class="col-xs-8">
@@ -535,12 +717,14 @@
 
 						<div class="row">
 							<div class="col-xs-3">
-								<label><abbr title="What is not spent will be used as a transaction fee">Transaction Fee</abbr></label>
+								<label><abbr title="What is not spent will be used as a transaction fee, so remember to add a &quot;change address&quot;">Transaction Fee</abbr>&nbsp;&nbsp;<a href="javascript:;" id="feesestnewtx"><span class="glyphicon glyphicon-question-sign"></span></a></label>
 								<input type="text" id="transactionFee" class="form-control" value="0.0000" readonly>
 							</div>
 						</div>
 
 						<br>
+
+						<div id="transactionCreateStatus" class="alert alert-danger hidden"></div>
 
 						<div id="transactionCreate" class="alert alert-success hidden">
 							<label>Transaction</label>
@@ -558,6 +742,211 @@
 						<br>
 					</div>
 
+
+					<div class="tab-pane tab-content" id="fees">
+						<h2>Bitcoin Fee Calculator</h2>
+						<p>This page will give you a guide on the lowest fee to use to get your transaction included within the next few blocks. It works by predicting the size of a transaction and comparing it to another transaction in a recent block to determine an appropriate fee.</p>	
+
+						<div align="center" class="alert alert-info">
+							<h2><span class="glyphicon glyphicon-question-sign"></span> Recommended Fee: <span class="recommendedFee">0.00000000</span> BTC <small> <br> for a transaction of <span class="feeTxSize">0</span> bytes</small></h2>
+							<span class="text-muted"><i><span class="feeSatByte">?</span> Sat/Byte</i></span>
+						</div>
+
+						<div id="txsliders" class="row">
+							<div class="col-md-6 txinputs">
+
+								<div align="center"><b><span class="txtotal total">0</span><br>Inputs</b></div>
+								<div id="txinputstype" align="center" class="small text-muted">
+									<br>
+									<span><span class="txsize">0</span> Bytes</span>
+								</div>
+
+								<h4 class="regular"><abbr title="Spending from a compressed legacy address. p2pkh">Regular</abbr> <small>Compressed</small> 
+									<span class="badge inputno" title="Number of Regular Inputs">1</span> 
+									<small><span class="bytes">148</span> bytes</small>
+									<small class="estimate hidden"><em> *estimate</em></small>
+								</h4> 
+
+								<div class="input-group">
+									<span class="input-group-btn"><button class="btn sliderbtn down" type="button"><span class="glyphicon glyphicon-chevron-left"></span></button></span>
+									<input type="range" min="0" max="100" value="1" class="slider txinput txi_regular" rel="regular">
+									<span class="input-group-btn"><button class="btn sliderbtn up" type="button"><span class="glyphicon glyphicon-chevron-right"></span></button></span>
+								</div>
+
+								<h4 class="segwit"><abbr title="Spending from a segwit address. p2sh">SegWit</abbr> 
+									<span class="badge inputno" title="Number of SegWit Inputs">0</span>
+									<small><span class="bytes">0</span> bytes</small>
+									<small class="estimate hidden"><em> *estimate</em></small>
+								</h4> 
+
+								<div class="input-group">
+									<span class="input-group-btn"><button class="btn sliderbtn down" type="button"><span class="glyphicon glyphicon-chevron-left"></span></button></span>
+									<input type="range" min="0" max="100" value="0" class="slider txinput txi_segwit" rel="segwit">
+									<span class="input-group-btn"><button class="btn sliderbtn up" type="button"><span class="glyphicon glyphicon-chevron-right"></span></button></span>
+								</div>
+
+								<h4 class="multisig"><abbr title="Spending from a multisig address. p2sh">MultiSig</abbr>  
+									<span class="badge inputno" title="Number of MultiSig Inputs">0</span>
+									<small><span class="bytes">0</span> bytes</small>
+									<small class="estimate hidden"><em> *estimate</em></small>
+								</h4> 
+
+								<div class="input-group">
+									<span class="input-group-btn"><button class="btn sliderbtn down" type="button"><span class="glyphicon glyphicon-chevron-left"></span></button></span>
+									<input type="range" min="0" max="100" value="0" class="slider txinput txi_multisig" rel="multisig">
+									<span class="input-group-btn"><button class="btn sliderbtn up" type="button"><span class="glyphicon glyphicon-chevron-right"></span></button></span>
+								</div>
+
+								<h4 class="hodl"><abbr title="Spending from a time locked address. p2sh">Hodl</abbr> <small>Time Locked</small> 
+									<span class="badge inputno" title="Number of Hodl Inputs">0</span>
+									<small><span class="bytes">0</span> bytes</small>
+									<small class="estimate hidden"><em> *estimate</em></small>
+								</h4>
+
+								<div class="input-group">
+									<span class="input-group-btn"><button class="btn sliderbtn down" type="button"><span class="glyphicon glyphicon-chevron-left"></span></button></span>
+									<input type="range" min="0" max="100" value="0" class="slider txinput txi_hodl" rel="hodl">
+									<span class="input-group-btn"><button class="btn sliderbtn up" type="button"><span class="glyphicon glyphicon-chevron-right"></span></button></span>
+								</div>
+
+								<h4 class="unknown"><abbr title="Spending from an unrecognized input. p2sh">Unknown</abbr> 
+									<span class="badge inputno" title="Number of Unknown Inputs">0</span>
+									<small><span class="bytes">0</span> bytes</small>
+									<small class="estimate hidden"><em> *estimate</em></small>
+								</h4>
+
+								<div class="input-group">
+									<span class="input-group-btn"><button class="btn sliderbtn down" type="button"><span class="glyphicon glyphicon-chevron-left"></span></button></span>
+									<input type="range" min="0" max="100" value="0" class="slider txinput txi_unknown" rel="unknown">
+									<span class="input-group-btn"><button class="btn sliderbtn up" type="button"><span class="glyphicon glyphicon-chevron-right"></span></button></span>
+								</div>
+
+								<br>
+							</div>
+
+							<div class="col-md-6 txoutputs">
+
+								<div align="center"><b><span class="txtotal total">0</span><br>Outputs</b></div>
+								<div id="txoutputtype" align="center" class="small text-muted">
+									<br>
+									<span><span class="txsize">0</span> Bytes</span>
+								</div>
+
+								<h4 class="p2pkh"><abbr title="A pay 2 public key hash. Starts with 1. Used with legacy addresses">Regular</abbr> <small>p2pkh (1...)</small> 
+									<span class="badge outputno" title="Number of p2pkh Outputs">2</span> 
+									<small><span class="bytes">68</span> bytes</small>
+									<small class="estimate hidden"><em> *estimate</em></small>
+								</h4>	 
+
+								<div class="input-group">
+									<span class="input-group-btn"><button class="btn sliderbtn down" type="button"><span class="glyphicon glyphicon-chevron-left"></span></button></span>
+									<input type="range" min="0" max="100" value="2" class="slider txoutput txo_p2pkh" rel="p2pkh">
+									<span class="input-group-btn"><button class="btn sliderbtn up" type="button"><span class="glyphicon glyphicon-chevron-right"></span></button></span>
+								</div>
+
+								<h4 class="p2sh"><abbr title="A pay 2 script hash address. Starts with a 3. For example a segwit or multisig address">Regular</abbr> <small>p2sh (3...)</small> 
+									<span class="badge outputno" title="Number of p2sh Outputs">0</span> 
+									<small><span class="bytes">0</span> bytes</small>
+									<small class="estimate hidden"><em> *estimate</em></small>
+								</h4> 
+
+								<div class="input-group">
+									<span class="input-group-btn"><button class="btn sliderbtn down" type="button"><span class="glyphicon glyphicon-chevron-left"></span></button></span>
+									<input type="range" min="0" max="100" value="0" class="slider txoutput txo_p2sh" rel="p2sh">	
+									<span class="input-group-btn"><button class="btn sliderbtn up" type="button"><span class="glyphicon glyphicon-chevron-right"></span></button></span>
+								</div>
+
+								<br>
+							</div>
+						</div>
+
+						<br>
+
+						<div class="row">
+							<div class="col-md-12">
+								<div class="text-muted">Chargable Transaction Size: <span class="feeTxSize">0</span> bytes</div>
+							</div>
+						</div>
+
+						<hr>
+
+						<div class="row">
+							<div class="col-md-12 recommended">
+
+								<h3>Blockchain Data <span class="pull-right"><button type="button" id="feeStatsReload" class="btn btn-default btn-sm"><span class="glyphicon glyphicon-refresh"></span></button></span></h3>
+
+								<p>This is based on us comparing your transaction against a very recent transaction found in a very recent block</p>
+								<p><b>Block Height</b>: <span class="blockHeight">?</span></p>
+								<p class="hideOverflow"><b>Block #</b>: <span class="blockHash">?</span></p>
+								<p><b>Block Time</b>: <span class="blockTime">?</span> <span class="blockDateTime text-muted"></span></p>
+								<p class="hideOverflow"><b>Transaction ID</b>: <span class="txId">?</span></p>
+								<p><b>Transaction Size</b>: <span class="txSize">0</span> bytes</p>
+								<p><b>Transaction Fee</b>: <span class="txFee">0.00000000</span></p>
+								<p><b>Satoshi per Byte</b>: <span class="feeSatByte">0</span></p>
+
+								<p>Based on your data and this recently mined transaction we recommend a fee of <b><span class="recommendedFee">0.00000000</span> BTC</b> to get it into the next few blocks</p>
+							</div>
+						</div>
+
+						<br>
+
+						<div class="row">
+
+							<div class="col-md-12">
+								<a href="javascript:;" id="advancedFeesCollapse">
+									<div class="well well-sm"><span class="glyphicon glyphicon-collapse-down"></span> Advanced Options &amp; Raw Transaction</div>
+								</a>
+							</div>
+						</div>
+
+						<div class="row hidden" id="advancedFees">
+							<div class="col-md-12">
+								<p>Enter your unsigned or signed hex encoded transaction below:</p>
+								<textarea class="form-control txhex" style="height:160px"></textarea><br>
+								<button type="button" class="btn btn-primary" id="feesAnalyseBtn">Analyse Transaction</button>
+
+								<hr>
+
+								<h4>Estimate Input Size <small>in bytes</small></h4>
+
+								<div class="form-inline">
+									<div class="form-group">
+										<label for="est_txi_regular">Regular</label>
+										<input type="number" class="form-control" id="est_txi_regular" value="107">
+									</div>
+									<div class="form-group">
+										<label for="est_txi_segwit">SegWit</label>
+										<input type="number" class="form-control" id="est_txi_segwit" value="27">
+									</div>
+									<div class="form-group">
+										<label for="est_txi_multisig">MultiSig</label>
+										<input type="number" class="form-control" id="est_txi_multisig" value="351">
+									</div>
+									<div class="form-group">
+										<label for="est_txi_hodl">Hodl</label>
+										<input type="number" class="form-control" id="est_txi_hodl" value="78">
+									</div>
+									<div class="form-group">
+										<label for="est_txi_unknown">Unknown</label>
+										<input type="number" class="form-control" id="est_txi_unknown" value="512">
+									</div>
+								</div>
+
+								<h4>Estimate Output Size <small> in bytes</small></h4>
+								<div class="form-inline">
+									<div class="form-group">
+										<label for="est_txo_p2pkh">Regular P2PKH</label>
+										<input type="number" class="form-control" id="est_txo_p2pkh" value="25">
+									</div>
+										<div class="form-group">
+										<label for="est_txo_p2sh">Regular P2SH</label>
+										<input type="number" class="form-control" id="est_txo_p2sh" value="23">
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+
 					<div class="tab-pane tab-content" id="verify">
 						<h2>Verify <small>transactions and other scripts</small></h2>
 						<div class="row">
@@ -569,26 +958,82 @@
 						<br>
 
 						<div class="hidden verifyData" id="verifyRsData">
+
 							<h4>Redeem Script</h4>
 							<p><span style="float:right"><a href="javascript:;" target="_blank" class="verifyLink" title="Link to this page"><span class="glyphicon glyphicon-link"></span></a></span>The above redeem script has been decoded</p>
-							<label>Multi Signature Address</label>
-							<div class="row">
-								<div class="col-lg-6">
-									<div class="input-group">
-										<input type="text" class="form-control address multisigAddress" value="" readonly>
-										<span class="input-group-btn">
-											<button class="qrcodeBtn btn btn-default" type="button" data-toggle="modal" data-target="#modalQrcode"><span class="glyphicon glyphicon-qrcode"></span></button>
-										</span>
+
+							<div class="hidden" id="verifyRsDataMultisig">
+								<label>Multi Signature Address</label>
+								<div class="row">
+    									<div class="col-lg-6">
+    										<div class="input-group">
+    											<input type="text" class="form-control address multisigAddress" value="" readonly>
+    											<span class="input-group-btn">
+    												<button class="qrcodeBtn btn btn-default" type="button" data-toggle="modal" data-target="#modalQrcode"><span class="glyphicon glyphicon-qrcode"></span></button>
+    											</span>
+    										</div>
+    									</div>
+    								</div>
+
+								<label>Required Signatures</label>
+		    						<p class="signaturesRequired">?</p>
+    								<label>Signatures Required from</label>
+    								<table class="table table-striped table-hover">
+    									<tbody>
+    									</tbody>
+    								</table>
+								<br>
+							</div>
+	
+							<div class="hidden verifyData" id="verifyRsDataSegWit">
+				                               	<label>Segwit Address</label>
+   								<div class="row">
+   									<div class="col-lg-6">
+    										<div class="input-group">
+    											<input type="text" class="form-control address segWitAddress" value="" readonly>
+    											<span class="input-group-btn">
+    												<button class="qrcodeBtn btn btn-default" type="button" data-toggle="modal" data-target="#modalQrcode"><span class="glyphicon glyphicon-qrcode"></span></button>
+    											</span>
+    										</div>
+									</div>
+								</div>
+								<br>
+							</div>
+
+							<div class="hidden verifyData" id="verifyRsDataHodl">
+								<label>Hodl Address</label>
+								<div class="row">
+									<div class="col-md-12">
+										<div class="input-group">
+											<input type="text" class="form-control address" value="" readonly>
+											<span class="input-group-btn">
+												<button class="qrcodeBtn btn btn-default" type="button" data-toggle="modal" data-target="#modalQrcode"><span class="glyphicon glyphicon-qrcode"></span></button>
+											</span>
+										</div>
+									</div>
+								</div>
+
+								<label>Required Signature</label>
+								<div class="row">
+									<div class="col-md-12">
+										<div class="input-group">
+											<input type="text" class="form-control address pubkey" value="" readonly>
+											<span class="input-group-btn">
+												<button class="qrcodeBtn btn btn-default" type="button" data-toggle="modal" data-target="#modalQrcode"><span class="glyphicon glyphicon-qrcode"></span></button>
+											</span>
+										</div>
+									</div>
+								</div>
+
+								<label>Unlock Time</label>
+								<div class="row">
+									<div class='col-md-4'>
+										<div class="input-group">
+											<input type="text" class="form-control date" value="" readonly>
+										</div>
 									</div>
 								</div>
 							</div>
-							<label>Required Signatures</label>
-							<p class="signaturesRequired">?</p>
-							<label>Signatures Required from</label>
-							<table class="table table-striped table-hover">
-								<tbody>
-								</tbody>
-							</table>
 						</div>
 
 						<div class="hidden verifyData" id="verifyTransactionData">
@@ -597,6 +1042,8 @@
 							<div><b>Version</b>: <span class="transactionVersion"></span></div>
 							<div><b>Transaction Size</b>: <span class="transactionSize"></span></div>
 							<div><b>Lock time</b>: <span class="transactionLockTime"></span></div>
+							<div class="transactionSegWit"><b>SegWit</b>: True</div>
+							<div class="transactionRBF"><b>RBF</b>: This is a <a href="https://en.bitcoin.it/wiki/Transaction_replacement">replace by fee</a> transaction!</div>
 
 							<hr>
 
@@ -623,6 +1070,7 @@
 							</table>
 						</div>
 
+
 						<div class="hidden verifyData" id="verifyPrivKey">
 							<h4>WIF key</h4>
 							<p>The above wif key has been decoded</p>
@@ -636,7 +1084,20 @@
 						<div class="hidden verifyData" id="verifyPubKey">
 							<h4>Public key</h4>
 							<p><span style="float:right"><a href="" target="_blank" class="verifyLink" title="Link to this page"><span class="glyphicon glyphicon-link"></span></a></span>The above public key has been encoded to its address</p>
-							<p><b>Address</b>: <input type="text" class="form-control address" readonly></p>
+							<p><b>Legacy Address</b>: <input type="text" class="form-control address" readonly></p>
+
+							<div class="hidden verifyDataSw">
+								<hr>
+								<div class="row">
+									<div class="col-md-6">
+										<p><b>Segwit Address</b>: <input type="text" class="form-control addressSegWit" readonly></p>
+									</div>
+
+									<div class="col-md-6">
+										<p><b>Segwit Redeem Script</b>: <input type="text" class="form-control addressSegWitRedeemScript" readonly></p>
+									</div>
+								</div>
+							</div>
 						</div>
 
 						<div class="hidden verifyData" id="verifyHDaddress">
@@ -732,11 +1193,13 @@
 
 						<input type="button" value="Submit" class="btn btn-primary" id="verifyBtn">
 						<br>
+
 					</div>
 
 					<div class="tab-pane tab-content" id="sign">
 						<h2>Sign Transaction <small>once a transaction has been verified</small></h2>
 						<p>Once you have <a href="#verify">verified</a> a transaction you can sign and then <a href="#broadcast">broadcast</a> it into the network.</p>
+
 						<div class="row">
 							<div class="col-md-12">
 								<label for="signPrivateKey">Private key</label>
@@ -758,6 +1221,33 @@
 						</div>
 						<br>
 
+						<a href="javascript:;" id="signAdvancedCollapse">
+							<div class="well well-sm"><span class="glyphicon glyphicon-collapse-down"></span> Advanced Options</div>
+						</a>
+
+						<div id="signAdvanced" class="hidden">
+							<div class="row">
+								<div class="col-md-12">
+									<label for="sighashType">Sig Hash Type</label>
+
+									<select id="sighashType" class="form-control">
+										<option value="1" rel="SIGHASH_ALL: Signs all the inputs and outputs, protecting everything against modification.">ALL (default)</option>
+										<option value="2" rel="SIGHASH_NONE: Signs all of the inputs but none of the outputs, allowing anyone to change where the satoshis are going unless other signatures using other signature hash flags protect the outputs.">NONE</option>
+										<option value="3" rel="SIGHASH_SINGLE: The only output signed is the one corresponding to this input, ensuring nobody can change your part of the transaction but allowing other signers to change their part of the transaction.">SINGLE</option>
+										<option value="129" rel="SIGHASH_ALL|SIGHASH_ANYONECANPAY: Signs all of the outputs but only this one input, it allows anyone to add or remove other inputs, so anyone can contribute additional satoshis but they cannot change how many satoshis are sent nor where they go.">ALL|ANYONECANPAY</option>
+										<option value="130" rel="SIGHASH_NONE|SIGHASH_ANYONECANPAY: Signs only this one input and allows anyone to add or remove other inputs or outputs, so anyone who gets a copy of this input can spend it however they'd like.">NONE|ANYONECANPAY</option>
+										<option value="131" rel="SIGHASH_SINGLE|SIGHASH_ANYONECANPAY: Signs this one input and its corresponding output. Allows anyone to add or remove other inputs.">SINGLE|ANYONECANPAY</option>
+									</select>
+								</div>
+							</div>
+
+							<br>
+
+							<div class="alert alert-info" id="sighashTypeInfo">
+								SIGHASH_ALL: The default, signs all the inputs and outputs, protecting everything except the signature scripts against modification.
+							</div>
+						</div>
+
 						<div class="alert alert-danger hidden" id="signedDataError">
 							<span class="glyphicon glyphicon-exclamation-sign"></span> There is a problem with one or more of your inputs, please check and try again
 						</div>
@@ -778,6 +1268,7 @@
 
 					<div class="tab-pane tab-content" id="broadcast">
 						<h2>Broadcast Transaction <small>into the bitcoin network</small></h2>
+						<a href="#settings" style="float:right;"><span class="glyphicon glyphicon-cog"></span></a>
 						<p>Enter your hex encoded bitcoin transaction</p>
 						<textarea class="form-control" style="height:125px" id="rawTransaction"></textarea>
 						<br>
@@ -795,8 +1286,8 @@
 
 					<div class="tab-pane tab-content" id="about">
 						<h2>About <small>open source bitcoin wallet</small></h2>
-						<p>Version 1.2</p>
-						<p>Compatible with bitcoin-qt</p>
+						<p>Version 1.3</p>
+						<p>Compatible with bitcoin core</p>
 						<p>Github <a href="https://github.com/OutCast3k/coinbin/">https://github.com/OutCast3k/coinbin/</a></p>
 						<p>TOR <a href="http://4zpinp6gdkjfplhk.onion">4zpinp6gdkjfplhk.onion</a></p>
 						<h3>What is Bitcoin?</h3>
@@ -806,9 +1297,11 @@
 						<p>Coinb.in is a free and open source project released under the MIT license, originally by <a href="https://bitcointalk.org/index.php?action=profile;u=34834" target="_blank">OutCast3k</a> in 2013. Discussion of the project can be found at <a href="https://bitcointalk.org/index.php?topic=390046" target="_blank">bitcointalk.org</a> during its early testing stages when its primary focus was to develop a proof of concept multisig solution in javascript.</p>
 						<p>Coinb.in is run and funded by the generosity of others in terms of <a href="https://github.com/OutCast3k/coinbin/graphs/contributors" target="_blank">development</a> and hosting.</p>
 						<h3>Privacy</h3>
-						<p>Coinb.in beleives strongly in privacy, not only do we support the use of TOR, the site does not collect and store IP or transaction data via our servers nor do we store your bitcoins private key. We do use google analytics to track hits and route traffic via cloudflare using an SSL certificate.</p>
+						<p>Coinb.in believes strongly in privacy, not only do we support the use of TOR, the site does not collect and store IP or transaction data via our servers nor do we store your bitcoins private key. We do route traffic via cloudflare using an SSL certificate.</p>
+						<h3>Support</h3>
+						<p>We recommend that you first check our <a href="https://status.coinb.in/" target="_blank">service status</a> page and then <a href="https://blog.coinb.in/" target="_blank">blog</a> page which has multiple <a href="https://blog.coinb.in/guides" target="_blank">guides</a>. However if the problem persists you can contact us by emailing support{at}coinb.in.</p>
 						<h3>Donate</h3>
-						<p>Please donate to <a href="bitcoin:1CWHWkTWaq1K5hevimJia3cyinQsrgXUvg">1CWHWkTWaq1K5hevimJia3cyinQsrgXUvg</a> if you found this project useful or want to see more features!</p>
+						<p>Please donate to <a href="bitcoin:3K1oFZMks41C7qDYBsr72SYjapLqDuSYuN">3K1oFZMks41C7qDYBsr72SYjapLqDuSYuN</a> if you found this project useful or want to see more features!</p>
 					</div>
 
 					<div class="tab-pane tab-content" id="settings">
@@ -821,9 +1314,10 @@
 								<p class="text-muted">Select which network you'd like to use for key pair generation.</p>
 								<select class="form-control" id="coinjs_coin">
 									<option value="bitcoin_mainnet" rel="0x00;0x80;0x05;0x488b21e;0x488ade4;coinb.in;coinb.in">Bitcoin (mainnet)</option>
-									<option value="litecoin_mainnet" rel="0x30;0xb0;0x05;0x019da462;0x019d9cfe;blockr.io_litecoin;chain.so_litecoin">Litecoin (mainnet)</option>
+									<option value="dogecoin_mainnet" rel="0x1e;0x9e;0x16;0x0827421e;0x089944e4;chain.so_dogecoin;chain.so_dogecoin">Dogecoin (mainnet)</option>
+									<option value="carboncoin_mainnet" rel="0x2f;0xaf;0x05;0x488b21e;0x488ade4;cryptoid.info_carboncoin;cryptoid.info_carboncoin">Carboncoin (mainnet)</option>
 									<option value="shadowcash_mainnet" rel="0x3f;0xbf;0x7d;0xee80286a;0xee8031e8;false;false">ShadowCash (mainnet)</option>
-								<!--	<option value="bitcoin_testnet" rel="0x6f;0xef;0xc4;0x043587cf;0x04358394;blockr.io_bitcointestnet;false">Bitcoin (testnet)</option> -->
+									<option value="bitcoin_testnet" rel="0x6f;0xef;0xc4;0x043587cf;0x04358394;false;false">Bitcoin (testnet)</option>
 
 									<option value="custom" rel="0x00;0x80;0x05;0x488b21e;0x488ade4;false;false">Custom</option>
 								</select>
@@ -877,9 +1371,10 @@
 								<p class="text-muted">Select the network you wish to broadcast the transaction via</p>
 								<select class="form-control" id="coinjs_broadcast">
 									<option value="coinb.in">coinb.in (Bitcoin mainnet)</option>
-									<option value="blockr.io_bitcoinmainnet"> Blockr.io (Bitcoin mainnet)</option>
-									<option value="blockr.io_litecoin"> Blockr.io (Litecoin)</option>
-								<!--	<option value="blockr.io_bitcointestnet"> Blockr.io (Bitcoin testnet)</option> -->
+									<option value="chain.so_bitcoinmainnet"> Chain.so (Bitcoin mainnet)</option>
+									<option value="blockcypher_bitcoinmainnet"> Blockcypher.com (Bitcoin mainnet)</option>
+									<option value="chain.so_dogecoin"> Chain.so (Dogecoin)</option>
+									<option value="cryptoid.info_carboncoin"> Cryptoid.info (Carboncoin)</option>
 								</select>
 							</div>
 						</div>
@@ -892,8 +1387,9 @@
 								<p class="text-muted">Select the network you wish to retreive your unspent inputs from</p>
 								<select class="form-control" id="coinjs_utxo">
 									<option value="coinb.in">coinb.in (Bitcoin mainnet)</option>
-									<option value="blockr.io_bitcoinmainnet"> Blockr.io (Bitcoin mainnet)</option>
 									<option value="chain.so_litecoin"> Chain.so (Litecoin)</option>
+									<option value="chain.so_dogecoin"> Chain.so (Dogecoin)</option>
+									<option value="cryptoid.info_carboncoin"> Cryptoid.info (Carboncoin)</option>
 								</select>
 							</div>
 						</div>
@@ -917,7 +1413,7 @@
 
 		<div id="footer">
 			<div class="container text-right">
-	        		<p class="text-muted">Version 1.2</p>
+	        		<p class="text-muted">Version 1.3</p>
 			</div>
 		</div>
 
@@ -936,6 +1432,12 @@
 
 					<br>
 					<div id="walletSendConfirmStatus" class="alert alert-danger hidden"></div>
+
+					<div id="walletSendFailTransaction" class="alert alert-info hidden">
+						<b>Raw Transaction:</b>
+						<p>Below is a copy of the transaction we tried to submit</p>
+						<textarea class="form-control" readonly></textarea>
+					</div>
 				</div>
 
 				<div class="modal-footer">
@@ -991,6 +1493,84 @@
 		</div>
 	</div>
 	<!-- qrcode scanner modal -->
+
+	<!-- mediator modal -->
+	<div class="modal fade" id="modalMediator" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+					<h4 class="modal-title">Transaction Mediation</h4>
+				</div>
+
+				<div class="modal-body">
+					<p>You can add a public key when creating a <i>2-of-3 multi signature address</i> and for a low fee your mediator will help with the recovery of the funds should any disputes arise.</p>
+
+					<p>Should a dispute arise please contact the below address for further information</p>
+					<div class="row">
+						<div class="col-md-5">
+							<label>Mediator:</label>
+
+							<!-- 
+								You need to contact us before adding your pubkey 
+								and submitting a pull request on github. 
+
+								format is: pubkey;email;fee
+							-->
+
+							<select id="mediatorList" class="form-control">
+								<option value="02b6231cc602740c29436eafbb6448880f4058cc3d2745c709deee313104678277;support@coinb.in;1">Coinb.in</option>
+							</select>
+						</div>
+
+						<div class="col-md-5">
+							<label>Address:</label> <span class="text-muted">(for disputes)</span>
+							<input id="mediatorEmail" type="text" class="form-control address" value="" readonly>	
+						</div>
+
+						<div class="col-md-2">
+							<label>Fee (%):</label> 
+							<input id="mediatorFee" type="text" class="form-control address" value="" readonly>	
+						</div>
+
+					</div>
+					<br>
+
+					<label>Public Key:</label>
+					<input id="mediatorPubkey" type="text" class="form-control address" value="" readonly>
+					<br>
+				</div>
+
+				<div class="modal-footer">
+					<button class="btn btn-primary" type="button" id="mediatorAddKey">Add Public Key</button>
+					<button type="button" class="btn btn-default" data-dismiss="modal" id="mediatorClose">Close</button>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!-- mediator modal -->
+
+
+	<!-- warning (fee) modal -->
+	<div class="modal fade" id="modalWarningFee" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+					<h4 class="modal-title"><b>Warning High Fee!</b></h4>
+				</div>
+
+				<div class="modal-body">
+					Please be aware that you have created a transaction with what seems to be a very high fee of <span id="modalWarningFeeAmount"></span> BTC!
+				</div>
+
+				<div class="modal-footer">
+					<button type="button" class="btn btn-primary" data-dismiss="modal" id="warningFeeClose">OK, I've got it!</button>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!-- warning (fee) modal -->
 
 	<div class="hidden" id="entropybucket"></div>
 	</body>
