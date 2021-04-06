@@ -202,7 +202,7 @@
 	/* create a new segwit bech32 encoded address */
 	coinjs.bech32Address = function(pubkey){
 		var program = ripemd160(Crypto.SHA256(Crypto.util.hexToBytes(pubkey), {asBytes: true}), {asBytes: true});
-		var address = coinjs.bech32_encode(coinjs.bech32.hrp, [coinjs.bech32.version].concat(coinjs.bech32_convert(program, 8, 5, true))); 
+		var address = coinjs.bech32_encode(coinjs.bech32.hrp, [coinjs.bech32.version].concat(coinjs.bech32_convert(program, 8, 5, true)));
 		return {'address':address, 'type':'bech32', 'redeemscript':Crypto.util.bytesToHex(program)};
 	}
 
@@ -380,7 +380,7 @@
 			ret.push(hrp.charCodeAt(p) & 31);
 		}
 		return ret;
-	}	
+	}
 
 	coinjs.	bech32_verifyChecksum = function(hrp, data) {
 		return coinjs.bech32_polymod(coinjs.bech32_hrpExpand(hrp).concat(data)) === 1;
@@ -392,7 +392,7 @@
 		var ret = [];
 		for (var p = 0; p < 6; ++p) {
 			ret.push((mod >> 5 * (5 - p)) & 31);
-		}	
+		}
 		return ret;
 	}
 
@@ -1215,9 +1215,14 @@
 					buffer = buffer.concat(coinjs.numToBytes(parseInt(shType), 4));
 				} else { /* SIGHASH_FORKID is flagged, perform BIP143 hashing. */
 					buffer = [];
+					var zeroh = [0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0];
 					buffer = buffer.concat(coinjs.numToBytes(parseInt(clone.version),4));
-					buffer = buffer.concat(coinjs.hash256(clone.getPrevouts()));
-					buffer = buffer.concat(coinjs.hash256(clone.getSequences()));
+					if (shMask & 0x80) //SIGHASH_ANYONECANPAY 0x80
+						buffer = buffer.concat(zeroh);
+					else buffer = buffer.concat(coinjs.hash256(clone.getPrevouts()));
+					if (!(shMask & 0x80) && shValue != 3 && shValue != 2) //!SIGHASH_ANYONECANPAY !=SIGHASH_SINGLE !=SIGHASH_NONE
+						buffer = buffer.concat(coinjs.hash256(clone.getSequences()));
+					else buffer = buffer.concat(zeroh);
 					buffer = buffer.concat(Crypto.util.hexToBytes(currentInput.outpoint.hash).reverse());
 					buffer = buffer.concat(coinjs.numToBytes(parseInt(currentInput.outpoint.index),4));
 					buffer = buffer.concat(coinjs.numToVarInt(currentInput.script.buffer.length));
