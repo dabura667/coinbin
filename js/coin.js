@@ -1229,7 +1229,11 @@
 					buffer = buffer.concat(currentInput.script.buffer);
 					buffer = buffer.concat(coinjs.numToBytes(currentInput.value,8));
 					buffer = buffer.concat(coinjs.numToBytes(parseInt(currentInput.sequence),4));
-					buffer = buffer.concat(coinjs.hash256(clone.getOutputs()));
+					if (shValue != 3 && shValue != 2) //!=SIGHASH_SINGLE !=SIGHASH_NONE
+						buffer = buffer.concat(coinjs.hash256(clone.getOutputs()));
+					else if (shValue == 3)
+						buffer = buffer.concat(coinjs.hash256(clone.getOutputs()));
+					else buffer = buffer.concat(zeroh);
 					buffer = buffer.concat(coinjs.numToBytes(parseInt(this.lock_time),4));
 					buffer = buffer.concat(coinjs.numToBytes(parseInt(shType), 4));
 				}
